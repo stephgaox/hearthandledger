@@ -11,6 +11,7 @@ backend/familybudget.personal.db
 # User data
 statements/
 scratch/
+demo_data/
 
 # Python caching
 __pycache__/
