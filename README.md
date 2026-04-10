@@ -54,4 +54,8 @@ Want to test the app without uploading your real bank statements?
 4. Enjoy real-time, dummy 20-month trend analysis!
 
 ## License
-MIT License. Free to use, fork, and modify.
+**Apache 2.0 with Commons Clause**
+
+This software is "Source-Available". You are free to view, fork, modify, and use this application for your own personal financial tracking. 
+
+However, under the Commons Clause, **you are strictly prohibited from selling this software or hosting it as a commercial service/SaaS.**
