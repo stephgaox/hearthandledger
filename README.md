@@ -1,10 +1,10 @@
-# Hearth & Ledger
+# HearthNet
 A sleek, privacy-first personal finance dashboard designed with a warm, glassmorphism "aged ledger" aesthetic.
 
-![Hearth & Ledger Dashboard](https://raw.githubusercontent.com/xinggao/hearth-and-ledger/main/frontend/public/demo.gif)
+![HearthNet Dashboard](https://raw.githubusercontent.com/xinggao/hearthnet/main/frontend/public/demo.gif)
 
 ## Overview
-Hearth & Ledger is a full-stack personal finance application built to replace massive, chaotic Excel spreadsheets. It parses your bank and credit card statements locally on your machine and generates beautiful, tactile visual analytics of your spending, income, and overall cash flow.
+HearthNet is a full-stack personal finance application built to replace massive, chaotic Excel spreadsheets. It parses your bank and credit card statements locally on your machine and generates beautiful, tactile visual analytics of your spending, income, and overall cash flow.
 
 It features:
 - **Zero-Config CSV/Excel parsing:** Drag and drop exports from Chase, Amex, Discover, and more.
@@ -25,15 +25,15 @@ It features:
 
 ### 1. Clone & Setup
 ```bash
-git clone https://github.com/YOUR_USERNAME/hearth-and-ledger.git
-cd hearth-and-ledger
+git clone https://github.com/YOUR_USERNAME/hearthnet.git
+cd hearthnet
 
 # Set up your environment file
 cp .env.example .env
 ```
 
 ### 2. Add API Key (Optional)
-If you wish to upload raw image screenshots or scanned paper PDFs, Hearth & Ledger uses an AI fallback parser. Open `.env` and add your key:
+If you wish to upload raw image screenshots or scanned paper PDFs, HearthNet uses an AI fallback parser. Open `.env` and add your key:
 ```env
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 ```

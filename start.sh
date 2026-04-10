@@ -57,7 +57,7 @@ elif command -v xdg-open &>/dev/null; then
 fi
 
 echo ""
-echo "✅ Family Budget Dashboard is running!"
+echo "✅ HearthNet Dashboard is running!"
 echo "   Frontend: http://localhost:5173"
 echo "   Backend:  http://localhost:8000"
 echo "   Press Ctrl+C to stop."
