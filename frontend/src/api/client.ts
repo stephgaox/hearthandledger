@@ -69,7 +69,7 @@ export const getCCPaymentsByCard = (year: number, month?: number, count = 6) =>
   )
 
 export const getAvailableYears = () =>
-  api.get<{ years: number[] }>('/dashboard/years')
+  api.get<{ years: number[]; latest_year: number; latest_month: number }>('/dashboard/years')
 
 // Transactions
 export const getTransactions = (params: {

@@ -741,12 +741,26 @@ def cc_monthly_trend(
 
 @router.get("/dashboard/years")
 def available_years(db: Session = Depends(get_db)):
-    from sqlalchemy import extract, distinct
+    from sqlalchemy import extract, distinct, func
     rows = db.query(distinct(extract("year", Transaction.date))).order_by(
         extract("year", Transaction.date).desc()
     ).all()
     years = [int(r[0]) for r in rows]
     if not years:
         import datetime
-        years = [datetime.date.today().year]
-    return {"years": years}
+        today = datetime.date.today()
+        return {"years": [today.year], "latest_year": today.year, "latest_month": today.month}
+
+    # Find the most recent month that actually has data
+    latest_row = db.query(
+        func.max(Transaction.date)
+    ).scalar()
+    if latest_row:
+        latest_year = latest_row.year
+        latest_month = latest_row.month
+    else:
+        import datetime
+        today = datetime.date.today()
+        latest_year, latest_month = today.year, today.month
+
+    return {"years": years, "latest_year": latest_year, "latest_month": latest_month}

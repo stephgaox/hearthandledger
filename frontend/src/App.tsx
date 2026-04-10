@@ -29,6 +29,7 @@ export default function App() {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
+  const [initialDateSet, setInitialDateSet] = useState(false)
   const [showUpload, setShowUpload] = useState(false)
   const [showManage, setShowManage] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -63,7 +64,12 @@ export default function App() {
       const years = r.data.years
       if (years.length) {
         setAvailableYears(years)
-        setYear(prev => years.includes(prev) ? prev : years[0])
+        // On first load, jump to the latest month that actually has data
+        if (!initialDateSet) {
+          setYear(r.data.latest_year ?? years[0])
+          setMonth(r.data.latest_month ?? today.getMonth() + 1)
+          setInitialDateSet(true)
+        }
       }
     })
     getAccounts().then(r => setAccounts(r.data))
