@@ -1,0 +1,259 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --card: #fffcf5;
+    --ring: #a67c52;
+    --input: #dbd0ba;
+    --muted: #ece5d8;
+    --accent: #d4c8aa;
+    --border: #dbd0ba;
+    --radius: 0.25rem;
+    --chart-1: #a67c52;
+    --chart-2: #8d6e4c;
+    --chart-3: #735a3a;
+    --chart-4: #b3906f;
+    --chart-5: #c0a080;
+    --primary: #a67c52;
+    --background: #f5f1e6;
+    --foreground: #4a3f35;
+    --destructive: #b54a35;
+    --muted-foreground: #7d6b56;
+    --income: #4a7c59;
+    --expense: #b54a35;
+    --warning: #b45309;
+    --chart-cursor: rgb(166 124 82 / 0.08);
+  }
+
+  .dark {
+    --card: #3d342d;
+    --ring: #c8aa80;
+    --input: #4e4338;
+    --muted: #3d342d;
+    --accent: #5c4c3f;
+    --border: #4e4338;
+    --chart-1: #c8aa80;
+    --chart-2: #b8966a;
+    --chart-3: #a67c52;
+    --chart-4: #8d6e4c;
+    --chart-5: #735a3a;
+    --primary: #c8aa80;
+    --background: #241f1b;
+    --foreground: #ece5d8;
+    --destructive: #b54a35;
+    --muted-foreground: #c9c0ad;
+    --income: #6e9e7c;
+    --expense: #bc5f4e;
+    --warning: #c8820e;
+    --chart-cursor: rgb(200 170 128 / 0.12);
+  }
+
+  body {
+    @apply bg-surface text-text antialiased;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    /* Subtle parchment grain — paper metaphor without glassmorphism */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+
+  /* Global focus-visible ring — matches primary token */
+  :focus-visible {
+    outline: 2px solid #a67c52;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .min-w-0-child > * {
+    min-width: 0;
+  }
+
+  /* Section divider — strong horizontal ink rule between dashboard zones */
+  .section-rule {
+    border-top: 1.5px solid;
+    @apply border-surface-border;
+    margin-top: 2.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Chart card tinted header strip */
+  .chart-header-income {
+    background: linear-gradient(to bottom, rgb(74 124 89 / 0.08), transparent);
+    border-top: 2px solid rgb(74 124 89 / 0.35);
+    @apply rounded-t-xl px-5 pt-4 pb-3;
+  }
+  .chart-header-expense {
+    background: linear-gradient(to bottom, rgb(181 74 53 / 0.07), transparent);
+    border-top: 2px solid rgb(181 74 53 / 0.3);
+    @apply rounded-t-xl px-5 pt-4 pb-3;
+  }
+  .chart-header-primary {
+    background: linear-gradient(to bottom, rgb(166 124 82 / 0.09), transparent);
+    border-top: 2px solid rgb(166 124 82 / 0.3);
+    @apply rounded-t-xl px-5 pt-4 pb-3;
+  }
+}
+
+/* ── Dark mode overrides ──────────────────────────────────────────────────────
+   Unlayered rules beat @layer rules in the CSS cascade, so these override
+   Tailwind's generated classes without needing !important or touching
+   any component files.
+
+   Color strategy: every dark value stays in the warm brown family (hue ~30–45°).
+   Financial accent colors are muted and slightly warm so they feel at home
+   on the dark parchment rather than clashing against it.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Body */
+.dark body {
+  background-color: #241f1b;
+  color: #ece5d8;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* Focus ring */
+.dark :focus-visible {
+  outline-color: #c0a080;
+}
+
+/* Surfaces — three distinct elevations */
+.dark .bg-surface      { background-color: #241f1b; } /* deep base floor */
+.dark .bg-surface-card { background-color: #3d342d; } /* raised card — clearly distinct */
+
+/* Borders */
+.dark .border-surface-border      { border-color: #4a4039; }
+.dark .divide-surface-border > * + * { border-color: #4a4039; }
+
+/* Hover — visibly above card, still warm */
+.dark .hover\:bg-surface-hover:hover { background-color: #433a30; }
+.dark .hover\:bg-surface:hover       { background-color: #2d2621; }
+
+/* Text */
+.dark .text-text       { color: #ece5d8; }
+.dark .text-text-muted { color: #c5bcac; }
+.dark .text-text-faint { color: #7e6e5c; }
+
+/* Primary — warm tan, dark text for contrast */
+.dark .bg-primary                    { background-color: #c0a080; color: #2d2621; }
+.dark .bg-primary-light              { background-color: #4a3d30; }
+.dark .text-primary                  { color: #c0a080; }
+.dark .border-primary                { border-color: #c0a080; }
+.dark .ring-primary                  { --tw-ring-color: #c0a080; }
+.dark .focus\:ring-primary:focus     { --tw-ring-color: #c0a080; }
+.dark .hover\:bg-primary-hover:hover { background-color: #cab090; color: #2d2621; }
+
+/* Income — muted sage, warm-tinted so it sits on the brown palette */
+.dark .bg-income        { background-color: #6e9e7c; }
+.dark .bg-income-light  { background-color: #1f2822; } /* just a whisper of green */
+.dark .text-income      { color: #6e9e7c; }
+.dark .text-income-text { color: #94b8a0; }
+.dark .border-income\/20 { border-color: rgb(110 158 124 / 0.2); }
+
+/* Expense — warm rust-coral, not neon red */
+.dark .bg-expense        { background-color: #bc5f4e; }
+.dark .bg-expense-light  { background-color: #2a1c1a; } /* dark warm red-brown */
+.dark .text-expense      { color: #bc5f4e; }
+.dark .text-expense-text { color: #d28878; }
+.dark .border-expense\/20 { border-color: rgb(188 95 78 / 0.2); }
+
+/* Net — same family as primary (tan) */
+.dark .bg-net-light  { background-color: #3a322c; }
+.dark .text-net-text { color: #ccae88; }
+
+/* Savings — warm olive-gold */
+.dark .bg-savings-light  { background-color: #232818; } /* dark olive with warmth */
+.dark .text-savings-text { color: #aabb74; }
+
+/* Warning — amber, softer than full-brightness orange */
+.dark .bg-warning        { background-color: #c8820e; }
+.dark .bg-warning-light  { background-color: #2c2212; } /* dark amber-brown */
+.dark .text-warning      { color: #c8820e; }
+.dark .text-warning-text { color: #e2a030; }
+
+/* Form controls — explicit warm-parchment dark styling */
+.dark input,
+.dark select,
+.dark textarea {
+  color-scheme: dark;
+  background-color: #2d2621;
+  color: #ece5d8;
+  border-color: #4a4039;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #7e6e5c;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  background-color: #322b25;
+  border-color: #c0a080;
+  box-shadow: 0 0 0 2px rgb(192 160 128 / 0.20);
+}
+
+/* Upload modal dialog card */
+.dark [role="dialog"] {
+  background-color: #3d342d;
+  border: 1px solid #4a4039;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.55);
+}
+
+/* Drop zone — warm subtle dashes in dark mode */
+.dark .border-dashed {
+  border-color: #5a4e40;
+}
+
+.dark .border-dashed:hover {
+  border-color: #c0a080;
+  background-color: #2d2621;
+}
+
+.dark .border-dashed.border-primary {
+  border-color: #c0a080;
+  background-color: #362e27;
+}
+
+/* Upload icon circle in dark mode */
+.dark .bg-primary-light {
+  background-color: #4a3d30;
+}
+
+/* File-type info cards at the bottom of drop zone */
+.dark .bg-income-light {
+  background-color: #1e2a21 !important;
+}
+
+.dark .bg-expense-light {
+  background-color: #2a1c1a !important;
+}
+
+.dark .bg-warning-light {
+  background-color: #2c2212 !important;
+}
+
+/* Parsed-summary stat pills */
+.dark .bg-surface {
+  background-color: #241f1b !important;
+}
+
+/* Transaction preview rows */
+.dark .border-surface-border.rounded-xl.overflow-hidden {
+  background-color: #2d2621;
+}
