@@ -23,14 +23,46 @@ from services.direct_parser import _map_category
 # Matches: "3/20/2026", "03/20/26", "3-20-2026"
 _FULL_DATE_RE = re.compile(r"\b(\d{1,2})[/\-](\d{1,2})[/\-](\d{2,4})\b")
 
+# Matches: "January 22, 2025" or "January22, 2025" in headers
+_FULL_MONTH_DATE_RE = re.compile(
+    r"\b(January|February|March|April|May|June|July|August|September|October|November|December)\s*(\d{1,2}),?\s*(\d{4})\b",
+    re.IGNORECASE,
+)
+
 # Short date at start of line: "2/22" or "02/22"
 _SHORT_DATE_RE = re.compile(r"^(\d{1,2})/(\d{1,2})\s+")
+
+# Month-abbrev date at start of line: "Jan. 5" or "Dec. 29"
+_MONTH_DATE_RE = re.compile(
+    r"^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+(\d{1,2})\s+",
+    re.IGNORECASE,
+)
+
+_MONTH_MAP = {
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+}
+
+_FULL_MONTH_MAP = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
+}
 
 # Amount at end of line: "$34.29", "-$28.46", "($28.46)"
 _AMOUNT_RE = re.compile(r"[\-\+]?\$?[\d,]+\.\d{2}\)?\s*$")
 
 
 def _parse_full_date(text: str) -> Optional[date_type]:
+    # Try "January 22, 2025" style first (more specific)
+    m = _FULL_MONTH_DATE_RE.search(text)
+    if m:
+        month = _FULL_MONTH_MAP[m.group(1).lower()]
+        day, year = int(m.group(2)), int(m.group(3))
+        try:
+            return date_type(year, month, day)
+        except ValueError:
+            pass
+    # Fall back to numeric M/D/YYYY
     m = _FULL_DATE_RE.search(text)
     if not m:
         return None
@@ -41,6 +73,21 @@ def _parse_full_date(text: str) -> Optional[date_type]:
         return date_type(year, month, day)
     except ValueError:
         return None
+
+
+def _parse_month_date(line: str, stmt_year: int, stmt_month: int) -> Optional[tuple[date_type, str]]:
+    """Parse a 'Mon. D' date at line start (e.g. 'Jan. 5'); return (date, rest) or None."""
+    m = _MONTH_DATE_RE.match(line)
+    if not m:
+        return None
+    month = _MONTH_MAP[m.group(1).lower()]
+    day = int(m.group(2))
+    year = stmt_year if month <= stmt_month else stmt_year - 1
+    try:
+        d = date_type(year, month, day)
+    except ValueError:
+        return None
+    return d, line[m.end():]
 
 
 def _parse_short_date(line: str, stmt_year: int, stmt_month: int) -> Optional[tuple[date_type, str]]:
@@ -179,8 +226,8 @@ def parse_pdf_direct(path: str) -> Optional[list[dict]]:
         for line in lines:
             stripped = line.strip()
 
-            # Enter transactions block
-            if re.match(r"^\s*TRANSACTIONS\s*$", stripped, re.IGNORECASE):
+            # Enter transactions block — allow "Transactions (cont.)" etc.
+            if re.match(r"^\s*TRANSACTIONS\b", stripped, re.IGNORECASE):
                 in_tx_section = True
                 continue
 
@@ -189,7 +236,7 @@ def parse_pdf_direct(path: str) -> Optional[list[dict]]:
 
             # Section headers (no date at start)
             sec = _section_type(stripped)
-            if sec and not _SHORT_DATE_RE.match(stripped):
+            if sec and not _SHORT_DATE_RE.match(stripped) and not _MONTH_DATE_RE.match(stripped):
                 current_section = sec
                 continue
 
@@ -197,8 +244,9 @@ def parse_pdf_direct(path: str) -> Optional[list[dict]]:
             if _is_skip_line(stripped):
                 continue
 
-            # Try to parse as transaction line
-            result = _parse_short_date(stripped, stmt_year, stmt_month)
+            # Try numeric short date (1/5) then month-abbrev date (Jan. 5)
+            result = _parse_short_date(stripped, stmt_year, stmt_month) or \
+                     _parse_month_date(stripped, stmt_year, stmt_month)
             if not result:
                 continue
             tx_date, rest = result
@@ -215,12 +263,21 @@ def parse_pdf_direct(path: str) -> Optional[list[dict]]:
             abs_amount = abs(amount)
             tx_type = _classify_type(desc, current_section)
 
+            if tx_type == "transfer_in":
+                category = "Payment Received"
+            elif tx_type == "transfer_out":
+                category = "CC Payments"
+            else:
+                category = _map_category("", desc)
+
             transactions.append({
                 "date": tx_date.isoformat(),
                 "description": desc,
                 "amount": round(abs_amount, 2),
                 "type": tx_type,
-                "category": _map_category("", desc),
+                "category": category,
             })
 
-    return transactions if transactions else None
+    # Return [] (not None) so the caller knows it was a readable digital PDF;
+    # None is reserved for scanned/image PDFs that need AI fallback.
+    return transactions
