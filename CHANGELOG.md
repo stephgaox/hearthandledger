@@ -2,6 +2,24 @@
 
 ---
 
+## 2026-04-22 — Delete profile + start.sh reliability
+
+### Backend — routers/users.py
+- `DELETE /api/users/:id` now deletes the user's categories and accounts before removing the user row, fixing a SQLite FK constraint error that silently blocked all profile deletions
+
+### Frontend — EditProfileModal.tsx
+- Added **Delete Profile** danger zone below the Save button
+- Expanding it shows a red warning banner ("This cannot be undone. Your profile will be permanently deleted…")
+- If the profile has a passcode, a passcode field must be filled before the Delete button is enabled (client-side confirmation guard)
+- On success: clears auth token and returns to the profile picker
+
+### Infra — start.sh + README.md
+- `start.sh` now kills any stale process on port 8000 before launching uvicorn, preventing silent port-conflict failures where the proxy forwarded to a wrong server and returned 404 on user creation
+- Waits up to 15 s for the backend `/health` check before starting the frontend; exits with a clear error if the backend fails to start
+- README Quickstart and Troubleshooting sections updated to reflect both changes; added "Add Profile shows Not Found" entry
+
+---
+
 ## 2026-04-21 — Profile editing & UI fixes
 
 ### Frontend — EditProfileModal.tsx (new component)

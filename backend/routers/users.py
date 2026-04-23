@@ -109,7 +109,7 @@ def delete_user(
         raise HTTPException(status_code=409, detail="Cannot delete the only user")
     if current_user.id != user_id:
         raise HTTPException(status_code=403, detail="Cannot delete another user's profile")
-    from models import Transaction
+    from models import Account, Category, Transaction
     tx_count = db.query(Transaction).filter(Transaction.user_id == user_id).count()
     if tx_count > 0:
         raise HTTPException(
@@ -119,6 +119,10 @@ def delete_user(
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    # Remove owned categories and empty accounts before deleting the user
+    # so SQLite FK constraints don't block the deletion.
+    db.query(Category).filter(Category.user_id == user_id).delete()
+    db.query(Account).filter(Account.user_id == user_id).delete()
     db.delete(user)
     db.commit()
     return {"deleted": True}

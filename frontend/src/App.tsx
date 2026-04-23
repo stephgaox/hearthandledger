@@ -459,6 +459,7 @@ export default function App() {
           user={currentUser}
           onClose={() => setShowEditProfile(false)}
           onUpdated={updated => setCurrentUserState(updated)}
+          onDeleted={handleSwitchUser}
         />
       )}
 

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
-import { updateUser, setCurrentUser } from '../api/client'
+import { useEffect, useRef, useState } from 'react'
+import { deleteUser, updateUser, setAuthToken, setCurrentUser } from '../api/client'
 import type { User } from '../types'
 import { useFocusTrap } from '../hooks/useFocusTrap'
+
 
 const AVATAR_COLORS = [
   '#5a7a8a', '#c0522a', '#4a7c59', '#7a5a82',
@@ -16,9 +17,10 @@ interface Props {
   user: User
   onClose: () => void
   onUpdated: (user: User) => void
+  onDeleted: () => void
 }
 
-export default function EditProfileModal({ user, onClose, onUpdated }: Props) {
+export default function EditProfileModal({ user, onClose, onUpdated, onDeleted }: Props) {
   const [name, setName] = useState(user.name)
   const [avatarColor, setAvatarColor] = useState(user.avatar_color)
   const [newPasscode, setNewPasscode] = useState('')
@@ -27,7 +29,19 @@ export default function EditProfileModal({ user, onClose, onUpdated }: Props) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const [showDelete, setShowDelete] = useState(false)
+  const [deletePasscode, setDeletePasscode] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const deletePasscodeRef = useRef<HTMLInputElement>(null)
+
   const modalRef = useFocusTrap(true, onClose)
+
+  useEffect(() => {
+    if (showDelete && user.has_passcode) {
+      deletePasscodeRef.current?.focus()
+    }
+  }, [showDelete, user.has_passcode])
 
   // Reset passcode confirm when new passcode is cleared
   useEffect(() => {
@@ -211,6 +225,85 @@ export default function EditProfileModal({ user, onClose, onUpdated }: Props) {
             </button>
           </div>
         </form>
+
+        {/* Danger zone */}
+        <div className="border-t border-surface-border px-5 py-4">
+          {!showDelete ? (
+            <button
+              type="button"
+              onClick={() => setShowDelete(true)}
+              className="text-xs text-expense hover:underline"
+            >
+              Delete this profile…
+            </button>
+          ) : (
+            <div className="space-y-3">
+              {/* Warning banner */}
+              <div className="flex gap-2 rounded-lg bg-expense/10 border border-expense/30 px-3 py-2.5">
+                <svg className="w-4 h-4 text-expense flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <div>
+                  <p className="text-xs font-semibold text-expense">This cannot be undone.</p>
+                  <p className="text-xs text-expense/80 mt-0.5">
+                    Your profile will be permanently deleted. All your transactions and data will be lost.
+                  </p>
+                </div>
+              </div>
+
+              {/* Passcode confirmation (only if user has one) */}
+              {user.has_passcode && (
+                <div>
+                  <label className="block text-xs font-medium text-text-muted mb-1.5">
+                    Enter your passcode to confirm
+                  </label>
+                  <input
+                    ref={deletePasscodeRef}
+                    type="password"
+                    value={deletePasscode}
+                    onChange={e => setDeletePasscode(e.target.value)}
+                    inputMode="numeric"
+                    maxLength={20}
+                    placeholder="Passcode"
+                    className="w-full px-3 py-2 rounded-lg border border-expense/40 bg-surface text-text text-sm focus:outline-none focus:ring-2 focus:ring-expense"
+                  />
+                </div>
+              )}
+
+              {deleteError && <p className="text-xs text-expense">{deleteError}</p>}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowDelete(false); setDeletePasscode(''); setDeleteError('') }}
+                  className="flex-1 px-3 py-2 rounded-lg border border-surface-border text-xs text-text-muted hover:bg-surface-hover transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting || (user.has_passcode && !deletePasscode)}
+                  onClick={async () => {
+                    setDeleting(true)
+                    setDeleteError('')
+                    try {
+                      await deleteUser(user.id)
+                      setAuthToken(null)
+                      setCurrentUser(null)
+                      onDeleted()
+                    } catch (e: any) {
+                      setDeleteError(e?.response?.data?.detail ?? 'Could not delete profile')
+                      setDeleting(false)
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 rounded-lg bg-expense text-white text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting…' : 'Delete Profile'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
