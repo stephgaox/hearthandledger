@@ -59,8 +59,9 @@ That's it! The startup script will:
 2. **Check for Python 3** — same as above
 3. **Create your `.env` file** — auto-copied from the template
 4. **Install all dependencies** — Python packages & frontend modules
-5. **Launch both servers** — backend on `:8000`, frontend on `:5173`
-6. **Open your browser** — the dashboard loads automatically
+5. **Launch both servers** — clears port 8000 if busy, then starts backend on `:8000` and frontend on `:5173`
+6. **Confirm the backend is ready** — waits up to 15 seconds and exits with a clear error if it fails to start
+7. **Open your browser** — the dashboard loads automatically
 
 ### 3. Enable AI Parsing (Optional)
 If you want to upload scanned paper statements or screenshot images:
@@ -108,11 +109,21 @@ Scanned/image PDFs require an Anthropic API key. Either:
 <details>
 <summary><b>Port 8000 or 5173 already in use</b></summary>
 
-Kill the existing process:
+`start.sh` automatically clears port 8000 before launching. If you still hit a conflict (e.g. on port 5173), kill it manually and re-run:
 ```bash
-lsof -ti:8000 | xargs kill -9
 lsof -ti:5173 | xargs kill -9
+./start.sh
 ```
+</details>
+
+<details>
+<summary><b>"Add Profile" shows "Not Found" or profiles screen is empty</b></summary>
+
+The backend didn't start correctly (usually a stale process was on port 8000). Stop the app (`Ctrl+C`) and re-run:
+```bash
+./start.sh
+```
+The script will now automatically evict any process squatting on port 8000 and confirm the backend is healthy before opening the browser.
 </details>
 
 ## License

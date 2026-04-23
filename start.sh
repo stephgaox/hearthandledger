@@ -175,8 +175,31 @@ fi
 
 info "Starting backend on http://localhost:8000 ..."
 cp "$ROOT/.env" "$ROOT/backend/.env" 2>/dev/null || true
+
+# Kill any stale process on port 8000 before starting
+if lsof -ti:8000 &>/dev/null; then
+  warn "Port 8000 is already in use. Stopping the old process first..."
+  lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+  sleep 1
+fi
+
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload &
 BACKEND_PID=$!
+
+# Wait until the backend responds (up to 15 s) before proceeding
+info "Waiting for backend to be ready..."
+for i in $(seq 1 15); do
+  if curl -sf http://localhost:8000/health &>/dev/null; then
+    ok "Backend is ready."
+    break
+  fi
+  if [ "$i" -eq 15 ]; then
+    fail "Backend did not start within 15 seconds."
+    fail "Check the output above for Python errors, then re-run ./start.sh"
+    exit 1
+  fi
+  sleep 1
+done
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PHASE 4: Start frontend
@@ -198,7 +221,7 @@ FRONTEND_PID=$!
 # PHASE 5: Ready
 # ══════════════════════════════════════════════════════════════════════════════
 
-sleep 3
+sleep 2
 if command -v open &>/dev/null; then
   open "http://localhost:5173"
 elif command -v xdg-open &>/dev/null; then
