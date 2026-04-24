@@ -228,6 +228,7 @@ async def confirm_upload(
             Transaction.date == tx_date,
             Transaction.description == description,
             Transaction.amount == amount,
+            Transaction.type == tx_type,
             Transaction.account_id == account_id,
             Transaction.user_id == current_user.id,
         ).first()

@@ -690,15 +690,26 @@ def _detect_columns(header: list[str], sample_rows: list[list[str]]) -> dict:
     else:
         fmt = "unknown"
 
+    # Find a separate transaction-direction indicator column (e.g. Chase "Type": Sale/Return).
+    # Only meaningful when it's a different column from cat_col.
+    type_indicator_col = None
+    for i, h_item in enumerate(h):
+        if i == cat_col:
+            continue
+        if h_item.strip() == "type":
+            type_indicator_col = i
+            break
+
     return {
-        "date_col":        date_col,
-        "desc_col":        desc_col,
-        "amount_col":      amount_col,
-        "debit_col":       debit_col,
-        "credit_col":      credit_col,
-        "cat_col":         cat_col,
-        "amount_format":   fmt,
-        "positive_expense": positive_expense,
+        "date_col":           date_col,
+        "desc_col":           desc_col,
+        "amount_col":         amount_col,
+        "debit_col":          debit_col,
+        "credit_col":         credit_col,
+        "cat_col":            cat_col,
+        "type_indicator_col": type_indicator_col,
+        "amount_format":      fmt,
+        "positive_expense":   positive_expense,
     }
 
 
@@ -712,9 +723,10 @@ def _parse_universal(header: list[str], rows: list[list[str]]) -> list[dict]:
     amount_col = cols["amount_col"]
     debit_col  = cols["debit_col"]
     credit_col = cols["credit_col"]
-    cat_col    = cols["cat_col"]
-    fmt             = cols["amount_format"]
-    positive_expense = cols["positive_expense"]
+    cat_col           = cols["cat_col"]
+    type_indicator_col = cols["type_indicator_col"]
+    fmt               = cols["amount_format"]
+    positive_expense  = cols["positive_expense"]
 
     if date_col is None or desc_col is None:
         raise ValueError(
@@ -898,6 +910,12 @@ def _parse_universal(header: list[str], rows: list[list[str]]) -> list[dict]:
         else:
             # Always try description-based merchant matching (handles Amex — no category column)
             category = _map_category(category_raw, description)
+
+        # Chase "Type" column: an explicit "Return" overrides sign-based classification.
+        if type_indicator_col is not None and len(row) > type_indicator_col:
+            if row[type_indicator_col].strip().lower() == "return":
+                tx_type = "income"
+                category = "Refund"
 
         transactions.append({
             "date":        tx_date.isoformat(),
